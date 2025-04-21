@@ -1,8 +1,8 @@
 import './App.css'
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, createContext } from 'react';
 import { InputArea } from './components/inputArea'
 import { MAX_LEN, GRAY, YELLOW, GREEN, MAX_GUESSES} from './consts';
-
+import { OnScreenKeyBoard } from './components/screenKeyboard';
 
 function App() {
   // Ref for focusing on main div
@@ -25,8 +25,7 @@ function App() {
   // It'll be mapped via the character code ("Z" - "A" = 25)
   let [keyboardColors, setKeyboardColors] = useState(Array(26).fill(''));
 
-
-
+  // Context for passing down necessary functions to components
   // Focuses on div
   useEffect(() => {
     if(mainDiv.current) mainDiv.current.focus();
@@ -63,7 +62,7 @@ function App() {
         setGuessColors(updatedColors);
 
         // update keyboard colors
-        updateKeyboardColors();
+        updateKeyboardColors(updatedColors);
         
         // Check if curString == correctWord. If so, set done to true
         if(curString == correctWord) {
@@ -91,18 +90,18 @@ function App() {
   /**
    * Updates keyboard colors by grabbing the current word and the corresponding color array
    */
-  function updateKeyboardColors() {
+  function updateKeyboardColors(colors) {
     // Grab current guess
     const guess = guesses[curIndex];
     // Grab corresponding colors
-    const colors = guessColors[curIndex];
+    const curRowColors = colors[curIndex];
     // Create new keyboard colors array
     const updatedKbColors = [...keyboardColors];
-    
+      console.log("Colors: ", colors);
     // Iterate through, updating if needed
     for(let i = 0; i < 5; i++) {
       // grab corresponding color
-      const color = colors[i];
+      const color = curRowColors[i];
       // Grab index, mapping letter to its position in alphabet
       const index = guess.charCodeAt(i) - 'A'.charCodeAt(0);
 
@@ -121,6 +120,7 @@ function App() {
     <div className='main' ref={mainDiv} tabIndex={0} onKeyDown={(e) => handleKeyPress(e.key)}>
       WORDLE
       <InputArea guesses={guesses} colors={guessColors}/>
+      <OnScreenKeyBoard keyboardColors={keyboardColors} handleKeyPress={handleKeyPress}/>
     </div>
   )
 }
