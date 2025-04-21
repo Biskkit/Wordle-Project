@@ -36,22 +36,21 @@ function App() {
    * Adds extra word to the end of curString, should the length of curString be less than 5
    * @param {KeyboardEvent} e, keyevent 
    */
-  function handleKeyPress(e) {
+  function handleKeyPress(key) {
     // Check for edge cases where either 1. The user guessed correctly already or 2. They reached max number of guesses at 6
-    console.log("Done: ",done);
     if(curIndex === MAX_GUESSES || done) return;
     
     const curString = guesses[curIndex];
-    if(curString.length < MAX_LEN && e.key.length == 1 && (e.key.toUpperCase().charCodeAt(0)) >= "A".charCodeAt(0) && (e.key.toUpperCase().charCodeAt(0)) <= 'Z'.charCodeAt(0)) {
+    const curKey = key.toUpperCase();
+    if(curString.length < MAX_LEN && key.length == 1 && (curKey.charCodeAt(0)) >= "A".charCodeAt(0) && (curKey.charCodeAt(0)) <= 'Z'.charCodeAt(0)) {
       // Update guesses array to reflect this string
       const newGuesses = [...guesses];
-      newGuesses[curIndex] = newGuesses[curIndex] + e.key.toUpperCase();
-      console.log(newGuesses);
+      newGuesses[curIndex] = newGuesses[curIndex] + curKey;
       setGuesses(newGuesses);
     }
     // else, check if it's the enter key and handle accordingly. validating that the current guess is valid
     // and then initializing the color array at the current index
-    else if(e.code == "Enter") {
+    else if(key == "Enter") {
       if(curString.length == MAX_LEN) {
         // Since the word is filled out, update the guessColors array at the current index.
         // And update the keyboard colors array as well
@@ -77,7 +76,7 @@ function App() {
     // Finally, check if backspace was hit, in which case, the last letter inputted shall be deleted
     // Edge case: Word is empty 
     // No need to check MAX_LEN or anything since we're not adding anything
-    else if(e.code == "Backspace") {
+    else if(key == "Backspace") {
       // Return if string is already empty, don't need to do anything
       if(curString.length == 0) return;
 
@@ -119,7 +118,7 @@ function App() {
   }
 
   return (
-    <div className='main' ref={mainDiv} tabIndex={0} onKeyDown={handleKeyPress}>
+    <div className='main' ref={mainDiv} tabIndex={0} onKeyDown={(e) => handleKeyPress(e.key)}>
       WORDLE
       <InputArea guesses={guesses} colors={guessColors}/>
     </div>
