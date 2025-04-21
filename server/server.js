@@ -27,7 +27,7 @@ const answersSet = new Set(answers);
 // Functions for each endpoint
 function getWordOfDay(req, res) {
 	// Find today's date
-	const now = Date.now();
+	let now = Date.now();
 	// Floor to nearest day integer
 	now /= oneDay;
 	now = Math.floor(now);
@@ -54,5 +54,11 @@ function validateWord(req, res) {
 app.get('/word', getWordOfDay);
 
 // Set validate route, takes in word, and validates it if it's in the dictionary.
-app.get('/validate/:word', validateWord)
+app.get('/validate/:word', validateWord);
 
+// Let app listen
+app.listen(PORT, () => console.log("App listening on port " + PORT));
+
+process.on('SIGINT', () => {
+	process.exit(0);
+})

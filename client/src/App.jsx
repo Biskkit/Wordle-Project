@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { InputArea } from './components/inputArea'
 import { MAX_LEN, GRAY, YELLOW, GREEN, MAX_GUESSES} from './consts';
 import { OnScreenKeyBoard } from './components/screenKeyboard';
+import { getWordOfDay, validateWord } from '../serverFunctions';
 
 function App() {
   // Ref for focusing on main div
@@ -11,10 +12,11 @@ function App() {
   // When this happens, no further input should be accepted.
   // Note: Input can also be halted when the curIndex reaches 5, i.e. when the max guesses have been reached
   let [done, setDone] = useState(false);
+  let[error, setError] = useState('');
 
   // Current correct word to match guess with
   // (Just a placeholder for now). Should always be uppercase
-  let [correctWord, setCorrectWord] = useState("CHIPS");
+  let [correctWord, setCorrectWord] = useState('');
   // Array of guesses
   let [guesses, setGuesses] = useState(['','','','','','']);
   // Array of colors for each guess
@@ -30,7 +32,7 @@ function App() {
    * Adds extra word to the end of curString, should the length of curString be less than 5
    * @param {KeyboardEvent} e, keyevent 
    */
-const handleKeyPress = useCallback( (key) => {
+const handleKeyPress = useCallback( async (key) => {
   // Check for edge cases where either 1. The user guessed correctly already or 2. They reached max number of guesses at 6
   if(curIndex === MAX_GUESSES || done) return;
   
@@ -48,23 +50,36 @@ const handleKeyPress = useCallback( (key) => {
     if(curString.length == MAX_LEN) {
       // Since the word is filled out, update the guessColors array at the current index.
       // And update the keyboard colors array as well
+      // First check if it's valid
+      try {
+        const isValid = await validateWord(curString);
+        if(isValid) {
+          setError('');
+           // Grab colors array
+          const colors = getColors(curString, correctWord);
+          // Copy guessColors, and then update state
+          const updatedColors = [...guessColors];
+          updatedColors[curIndex] = colors;
+          setGuessColors(updatedColors);
 
-      // Grab colors array
-      const colors = getColors(curString, correctWord);
-      // Copy guessColors, and then update state
-      const updatedColors = [...guessColors];
-      updatedColors[curIndex] = colors;
-      setGuessColors(updatedColors);
-
-      // update keyboard colors
-      updateKeyboardColors(updatedColors);
-      
-      // Check if curString == correctWord. If so, set done to true
-      if(curString == correctWord) {
-        setDone(true);
+          // update keyboard colors
+          updateKeyboardColors(updatedColors);
+          
+          // Check if curString == correctWord. If so, set done to true
+          if(curString == correctWord) {
+            setDone(true);
+          }
+          // increment index
+          setCurIndex(curIndex+1);
+        }
+        else {
+          setError('Word not in list!');
+        }
       }
-      // increment index
-      setCurIndex(curIndex+1);
+      catch(err) {
+        console.error("Axios error", err);
+      }
+      
     }
   }
   // Finally, check if backspace was hit, in which case, the last letter inputted shall be deleted
@@ -91,7 +106,6 @@ function updateKeyboardColors(colors) {
   const curRowColors = colors[curIndex];
   // Create new keyboard colors array
   const updatedKbColors = [...keyboardColors];
-    console.log("Colors: ", colors);
   // Iterate through, updating if needed
   for(let i = 0; i < 5; i++) {
     // grab corresponding color
@@ -112,7 +126,21 @@ function updateKeyboardColors(colors) {
 }, [guesses, curIndex, guessColors, done, correctWord, keyboardColors]);
 
 
-  // Context for passing down necessary functions to components
+  // UseEffect to run once in the beginning to grab the word of the day
+  useEffect(() => {
+    async function fetchWordOfDay() {
+      try {
+        const word = await getWordOfDay();
+        // set state
+        setCorrectWord(word);
+      }catch(err) {
+        console.error("Axios error", err);
+      }
+    }
+    fetchWordOfDay();
+  }, [])  
+
+// Context for passing down necessary functions to components
   // Focuses on div
   useEffect(() => {
     const listener = (e) => handleKeyPress(e.key);
@@ -120,15 +148,17 @@ function updateKeyboardColors(colors) {
     return () => window.removeEventListener("keydown", listener)
   }, [handleKeyPress])
 
+
   
 
  
 
   return (
-    <div className='main' tabIndex={0} onKeyDown={(e) => handleKeyPress(e.key)}>
+    <div className='main' tabIndex={0}>
       WORDLE
       <InputArea guesses={guesses} colors={guessColors}/>
       <OnScreenKeyBoard keyboardColors={keyboardColors} handleKeyPress={handleKeyPress}/>
+      <p>{error}</p>
     </div>
   )
 }

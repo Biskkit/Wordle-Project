@@ -4,7 +4,6 @@
 
 export function OnScreenKeyBoard({ keyboardColors,  handleKeyPress }) {
 	// 2D array to match world layout
-	console.log("Rendering");
 	const keyboard = 
 	[['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
 	['A', 'S', 'D', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
