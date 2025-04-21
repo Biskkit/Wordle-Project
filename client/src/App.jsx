@@ -148,13 +148,8 @@ function updateKeyboardColors(colors) {
     return () => window.removeEventListener("keydown", listener)
   }, [handleKeyPress])
 
-
-  
-
- 
-
   return (
-    <div className='main' tabIndex={0}>
+    <div className='main'>
       WORDLE
       <InputArea guesses={guesses} colors={guessColors}/>
       <OnScreenKeyBoard keyboardColors={keyboardColors} handleKeyPress={handleKeyPress}/>
