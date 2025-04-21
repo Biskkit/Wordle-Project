@@ -45,8 +45,6 @@ function getWordOfDay(req, res) {
 function validateWord(req, res) {
 	// Grab word from params
 	let word = req.params.word;
-	console.log(word);
-	console.log(guessesSet.has(word.toLowerCase()));
 
 	// See if word is in word set
 	if(guessesSet.has(word.toLowerCase())) {
