@@ -2,7 +2,7 @@
 
 import axios from "axios";
 // Server IP
-const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+const SERVER_IP = process.env.REACT_APP_SERVER_URL;
 
 // Simply grabs the word of the day
 export async function getWordOfDay() {
