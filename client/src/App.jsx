@@ -27,6 +27,8 @@ function App() {
   // It'll be mapped via the character code ("Z" - "A" = 25)
   let [keyboardColors, setKeyboardColors] = useState(Array(26).fill(''));
 
+  // reveal word
+  let [revealWord, setRevealWord] = useState('');
 
 /**
    * Adds extra word to the end of curString, should the length of curString be less than 5
@@ -34,7 +36,9 @@ function App() {
    */
 const handleKeyPress = useCallback( async (key) => {
   // Check for edge cases where either 1. The user guessed correctly already or 2. They reached max number of guesses at 6
-  if(curIndex === MAX_GUESSES || done) return;
+  if(curIndex === MAX_GUESSES || done) {
+    return;
+  } 
   
   const curString = guesses[curIndex];
   const curKey = key.toUpperCase();
@@ -71,6 +75,7 @@ const handleKeyPress = useCallback( async (key) => {
           }
           // increment index
           setCurIndex(curIndex+1);
+          if(curIndex + 1 == MAX_GUESSES) setRevealWord("The word was " + correctWord);
         }
         else {
           setError('Word not in list!');
@@ -154,6 +159,7 @@ function updateKeyboardColors(colors) {
       <InputArea guesses={guesses} colors={guessColors}/>
       <OnScreenKeyBoard keyboardColors={keyboardColors} handleKeyPress={handleKeyPress}/>
       <p>{error}</p>
+      <p>{revealWord}</p>
     </div>
   )
 }
