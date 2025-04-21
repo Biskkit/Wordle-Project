@@ -74,6 +74,19 @@ function App() {
         setCurIndex(curIndex+1);
       }
     }
+    // Finally, check if backspace was hit, in which case, the last letter inputted shall be deleted
+    // Edge case: Word is empty 
+    // No need to check MAX_LEN or anything since we're not adding anything
+    else if(e.code == "Backspace") {
+      // Return if string is already empty, don't need to do anything
+      if(curString.length == 0) return;
+
+      // Otherwise, delete the last letter of the string
+      const newGuesses = [...guesses];
+      newGuesses[curIndex] = curString.substring(0, curString.length - 1);
+      // Update state
+      setGuesses(newGuesses);
+    }
   }
 
   /**
