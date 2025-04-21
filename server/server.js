@@ -18,7 +18,7 @@ const guesses = fs.readFileSync(path.join(__dirname, "guesses.txt"), 'utf-8').sp
 // Answers list was taken from https://gist.github.com/cfreshman/a03ef2cba789d8cf00c08f767e0fad7b#file-wordle-answers-alphabetical-txt-L8
 const answers = fs.readFileSync(path.join(__dirname, "answers.txt"), 'utf-8').split('\n').map(line => line.trim());
 // Make set out of answers for O(1) lookup
-const answersSet = new Set(answers);
+const guessesSet = new Set(guesses);
 
 
 // Sanity check that guesses list contains all answers
@@ -42,8 +42,11 @@ function getWordOfDay(req, res) {
 function validateWord(req, res) {
 	// Grab word from params
 	let word = req.params.word;
+	console.log(word);
+	console.log(guessesSet.has(word.toLowerCase()));
+
 	// See if word is in word set
-	if(answersSet.has(word.toLowerCase())) {
+	if(guessesSet.has(word.toLowerCase())) {
 		res.send(true);
 	}
 	else {
@@ -56,7 +59,6 @@ app.get('/word', getWordOfDay);
 
 // Set validate route, takes in word, and validates it if it's in the dictionary.
 app.get('/validate/:word', validateWord);
-
 // Let app listen
 app.listen(PORT, () => console.log("App listening on port " + PORT));
 
