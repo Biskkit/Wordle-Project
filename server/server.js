@@ -5,7 +5,8 @@ const oneDay = 1000 * 60 * 60 * 24;
 const cors = require('cors');
 
 const app = express();
-const PORT = 5000;
+// Process.env.PORT sets it to the port provided by render if there is one
+const PORT = process.env.PORT || 5000;
 
 // Set up cors since app and server are on different ports
 app.use(cors());
