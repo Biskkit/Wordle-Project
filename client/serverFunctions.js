@@ -1,8 +1,9 @@
 /** File to store all server-request related functions */
 
 import axios from "axios";
+import { meta } from "@eslint/js";
 // Server IP
-const SERVER_IP = process.env.REACT_APP_SERVER_URL;
+const SERVER_IP = meta.env.VITE_APP_SERVER_URL;
 
 // Simply grabs the word of the day
 export async function getWordOfDay() {
