@@ -36,7 +36,8 @@ function App() {
    */
 const handleKeyPress = useCallback( async (key) => {
   // Check for edge cases where either 1. The user guessed correctly already or 2. They reached max number of guesses at 6
-  if(curIndex === MAX_GUESSES || done) {
+  console.log(done);
+  if(done || curIndex === MAX_GUESSES) {
     return;
   } 
   
@@ -70,7 +71,8 @@ const handleKeyPress = useCallback( async (key) => {
           updateKeyboardColors(updatedColors);
           
           // Check if curString == correctWord. If so, set done to true
-          if(curString == correctWord) {
+          console.log(curString);
+          if(curString == correctWord.toUpperCase()) {
             setDone(true);
           }
           // increment index
