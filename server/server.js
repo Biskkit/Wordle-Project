@@ -9,7 +9,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Set up cors since app and server are on different ports
-app.use(cors());
+app.use(cors({
+	origin: [process.env.CLIENT_URL],
+	methods: ["GET"],
+}));
 // Initialize validGuesses and correct words
 
 // Valid guesses list was taken from github.com/tabatkins/wordle-list
