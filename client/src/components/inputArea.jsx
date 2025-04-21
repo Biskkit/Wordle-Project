@@ -1,33 +1,18 @@
 import { useState } from "react";
-export function InputArea() {
-	// Index to store what guess the user is currently at
-	let [index, setIndex] = useState(0);
-	// Array of guesses. Each array will be tied to a specific word row via being passed in as a prop/parameter
-	// This'll make it so that the word row is changed every time the word is updated
-	let [array, setArray] = useState(['', '', '', '', '', '']);
-
-	// React needs arrays to be duplicated as it won't update the state if you do direct manipulation like arr[1] = "something"
-	/**
-	 * @param {int} index, index of word to change
-	 * @param {String} word, word to replace the old word with
-	 */
-	function changeWord(index, word) {
-		// Duplicate array
-		let newArr = [...array];
-		newArr[index] = word;
-		// Update state
-		setArray[newArr];
-	}
-
+/**
+ * Takes in the current list of guesses along with the current list of colors corresponding to each letter
+ * @returns Display of the words in a neatly organized grid
+ */
+export function InputArea({guesses, colors}) {
 	// Now, each word row will take the word at the corresponding index as a prop/parameter
 	return(
 		<div className="inputArea">
-			<WordRow word="TESTS" colors={["gray", "gray", "gray", "green"]}/>
-			<WordRow word={array[1]} colors={[]}/>
-			<WordRow word={array[2]} colors = {[]}/>
-			<WordRow word={array[3]} colors={[]}/>
-			<WordRow word={array[4]} colors={[]}/>
-			<WordRow word={array[5]} colors={[]}/>
+			<WordRow word={guesses[0]} colors={colors[0]}/>
+			<WordRow word={guesses[1]} colors={colors[1]}/>
+			<WordRow word={guesses[2]} colors = {colors[2]}/>
+			<WordRow word={guesses[3]} colors={colors[3]}/>
+			<WordRow word={guesses[4]} colors={colors[4]}/>
+			<WordRow word={guesses[5]} colors={colors[5]}/>
 		</div>
 	)
 
@@ -45,9 +30,9 @@ function WordRow({word, colors}) {
 		<div className="word">
 			{/* Map each letter, l to the corresponding div */}
 			{word.map((letter, index) => {
-				// If letter is empty, return just an empty div
-				if(letter == '') {
-					return <div className="letter"></div>;
+				// If letter or colors array is empty, return just an empty div
+				if(letter == '' || colors.length == 0) {
+					return <div className="letter">{letter}</div>;
 				}
 				// If it isn't empty return the div with the corresponding background color
 				return <div className="letter" style={{backgroundColor: colors[index]}}>{letter}</div>;
