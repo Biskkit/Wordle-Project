@@ -1,9 +1,10 @@
 import './App.css'
 import { useEffect, useState, useCallback } from 'react';
 import { InputArea } from './components/inputArea'
-import { MAX_LEN, GRAY, YELLOW, GREEN, MAX_GUESSES} from './consts';
+import { MAX_LEN, WRONG_COLOR, WRONG_PLACE_COLOR, CORRECT_COLOR, MAX_GUESSES} from './consts';
 import { OnScreenKeyBoard } from './components/screenKeyboard';
-import { getWordOfDay, validateWord } from '../serverFunctions';
+import { getColorsString, getWordOfDay, validateWord } from '../serverFunctions';
+import { string_to_colors } from './misc_functions';
 
 function App() {
   // Ref for focusing on main div
@@ -16,7 +17,8 @@ function App() {
 
   // Current correct word to match guess with
   // (Just a placeholder for now). Should always be uppercase
-  let [correctWord, setCorrectWord] = useState('');
+  // let [correctWord, setCorrectWord] = useState('');
+  
   // Array of guesses
   let [guesses, setGuesses] = useState(['','','','','','']);
   // Array of colors for each guess
@@ -38,6 +40,7 @@ const handleKeyPress = useCallback( async (key) => {
   // Check for edge cases where either 1. The user guessed correctly already or 2. They reached max number of guesses at 6
   console.log(done);
   if(done || curIndex === MAX_GUESSES) {
+    console.log("done");
     return;
   } 
   
@@ -60,8 +63,14 @@ const handleKeyPress = useCallback( async (key) => {
         const isValid = await validateWord(curString);
         if(isValid) {
           setError('');
-           // Grab colors array
-          const colors = getColors(curString, correctWord);
+           // Grab colors string
+           console.log("Current word guessed: " + curString + "\n");
+          const colorsString = await getColorsString(curString);
+          console.log(colorsString);
+
+          // Convert to colors array
+          const colors = string_to_colors(colorsString);
+          
           // Copy guessColors, and then update state
           const updatedColors = [...guessColors];
           updatedColors[curIndex] = colors;
@@ -71,13 +80,16 @@ const handleKeyPress = useCallback( async (key) => {
           updateKeyboardColors(updatedColors);
           
           // Check if curString == correctWord. If so, set done to true
-          console.log(curString);
-          if(curString == correctWord.toUpperCase()) {
+          if(colorsString == "ccccc") {
             setDone(true);
           }
+
           // increment index
           setCurIndex(curIndex+1);
-          if(curIndex + 1 == MAX_GUESSES) setRevealWord("The word was " + correctWord);
+          if(curIndex + 1 == MAX_GUESSES)  {
+            const wordOfDay = await getWordOfDay();
+            setRevealWord("The word was " + wordOfDay);
+          }
         }
         else {
           setError('Word not in list!');
@@ -121,34 +133,36 @@ function updateKeyboardColors(colors) {
     const index = guess.charCodeAt(i) - 'A'.charCodeAt(0);
 
     // Now, check if keyboard color is green, if so, there's no need to update, so just continue
-    if(keyboardColors[index] == GREEN) continue;
+    if(keyboardColors[index] == CORRECT_COLOR) continue;
     // Next check if color is yellow or green, if so update
-    if(color == YELLOW || color == GREEN) updatedKbColors[index] = color;
+    if(color == WRONG_PLACE_COLOR || color == CORRECT_COLOR) updatedKbColors[index] = color;
     // Finally, check if the color is gray. Then it should only update when the keyboard hasn't stored a color there (i.e. the empty string)
-    else  if(color == GRAY && updatedKbColors[index].length == 0) updatedKbColors[index] = color;
+    else  if(color == WRONG_COLOR && updatedKbColors[index].length == 0) updatedKbColors[index] = color;
   }
   // update state
   setKeyboardColors(updatedKbColors);
 }
-}, [guesses, curIndex, guessColors, done, correctWord, keyboardColors]);
+}, [guesses, curIndex, guessColors, done, keyboardColors]);
 
 
   // UseEffect to run once in the beginning to grab the word of the day
-  useEffect(() => {
-    async function fetchWordOfDay() {
-      try {
-        const word = await getWordOfDay();
-        // set state
-        setCorrectWord(word);
-      }catch(err) {
-        console.error("Axios error", err);
-      }
-    }
-    fetchWordOfDay();
-  }, [])  
+  // useEffect(() => {
+  //   async function fetchWordOfDay() {
+  //     try {
+  //       const word = await getWordOfDay();
+  //       // set state
+  //       setCorrectWord(word);
+  //     }catch(err) {
+  //       console.error("Axios error", err);
+  //     }
+  //   }
+  //   fetchWordOfDay();
+  // }, [])  
 
-// Context for passing down necessary functions to components
+
+  // Context for passing down necessary functions to components
   // Focuses on div
+  
   useEffect(() => {
     const listener = (e) => handleKeyPress(e.key);
     window.addEventListener("keydown", listener);
@@ -172,52 +186,52 @@ function updateKeyboardColors(colors) {
  * @param {String} guessedWord
  * @param {String} correctWord 
  */
-function getColors(guessedWord, correctWord) {
-  // Upper case just to make things easier
-  guessedWord = guessedWord.toUpperCase();
-  correctWord = correctWord.toUpperCase();
-  // Frequency table for letters
-  const lettersCount = {};
+// function getColors(guessedWord, correctWord) {
+//   // Upper case just to make things easier
+//   guessedWord = guessedWord.toUpperCase();
+//   correctWord = correctWord.toUpperCase();
 
-  // Array to store colors, default to "gray"
-  const colors = Array(5).fill(GRAY);
+//   // Frequency table for letters
+//   const lettersCount = {};
 
-  // Edge case where the guessed word is the correct word
-  // In this case just return an array of all greens
-  if(guessedWord == correctWord) {
-    const colors = Array(5).fill(GREEN);
-    return colors;
-  }
+//   // Array to store colors, default to "gray"
+//   const colors = Array(5).fill(GRAY);
 
+//   // Edge case where the guessed word is the correct word
+//   // In this case just return an array of all greens
+//   if(guessedWord == correctWord) {
+//     const colors = Array(5).fill(GREEN);
+//     return colors;
+//   }
 
-  // Initialize frequency table
-  for(let i = 0; i < 5; i++) {
-    lettersCount[correctWord[i]] = (lettersCount[correctWord[i]] || 0) + 1;
-  }
+//   // Initialize frequency table
+//   for(let i = 0; i < 5; i++) {
+//     lettersCount[correctWord[i]] = (lettersCount[correctWord[i]] || 0) + 1;
+//   }
 
-  // First, iterate through, checking for words in the correct spot
-  for(let i = 0; i < 5; i++) {
-    if(guessedWord[i] == correctWord[i]) {
-      colors[i] = GREEN;
-      // Decrement count
-      lettersCount[guessedWord[i]]--;
-    }
-  }
+//   // First, iterate through, checking for words in the correct spot
+//   for(let i = 0; i < 5; i++) {
+//     if(guessedWord[i] == correctWord[i]) {
+//       colors[i] = GREEN;
+//       // Decrement count
+//       lettersCount[guessedWord[i]]--;
+//     }
+//   }
 
-  // Then, iterate through, checking if each word exists in the correct word. Using a set for simplification
-  for(let i = 0; i < 5; i++) {
-    // First, check that the color at the index isn't already green
-    if(colors[i] == GREEN) continue;
+//   // Then, iterate through, checking if each word exists in the correct word. Using a set for simplification
+//   for(let i = 0; i < 5; i++) {
+//     // First, check that the color at the index isn't already green
+//     if(colors[i] == GREEN) continue;
 
-    // If not, continue checking for membership
-    if(lettersCount[guessedWord[i]]) {
-      colors[i] = YELLOW;
-      lettersCount[guessedWord[i]]--;
-    }
-  }
-  // Everything else is gray by default, so no need to check for that
-  // Return array of colors
-  return colors;
-}
+//     // If not, continue checking for membership
+//     if(lettersCount[guessedWord[i]]) {
+//       colors[i] = YELLOW;
+//       lettersCount[guessedWord[i]]--;
+//     }
+//   }
+//   // Everything else is gray by default, so no need to check for that
+//   // Return array of colors
+//   return colors;
+// }
 
 export default App

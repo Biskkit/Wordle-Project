@@ -4,10 +4,10 @@ import axios from "axios";
 // Server IP
 const SERVER_IP = import.meta.env.VITE_APP_SERVER_URL;
 
-// Simply grabs the word of the day
-export async function getWordOfDay() {
+// Grabs colors of the word represented by a string
+export async function getColorsString(word) {
 	try {
-		const response = await axios.get(SERVER_IP + "word");
+		const response = await axios.get(SERVER_IP + "colors/" + word);
 		return response.data;
 	}catch(err) {
 		console.error("Failed to fetch word of day", err);
@@ -21,5 +21,14 @@ export async function validateWord(word) {
 		return response.data;
 	}catch(err) {
 		console.error("Failed to validate word", err);
+	}
+}
+
+export async function getWordOfDay() {
+	try {
+		const word = await axios.get(SERVER_IP + "word");
+		return word.data;
+	}catch(err) {
+		console.error("Failed to fetch word of day\n", err);
 	}
 }

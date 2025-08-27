@@ -13,8 +13,8 @@ app.use(cors({
 	origin: [process.env.CLIENT_URL],
 	methods: ["GET"],
 }));
-// Initialize validGuesses and correct words
 
+// Initialize validGuesses and correct words
 // Valid guesses list was taken from github.com/tabatkins/wordle-list
 const guesses = fs.readFileSync(path.join(__dirname, "guesses.txt"), 'utf-8').split('\n').map(line => line.trim());
 
@@ -29,7 +29,7 @@ const guessesSet = new Set(guesses);
 // const missing = answers.filter(word => !guessSet.has(word));
 
 // Functions for each endpoint
-function getWordOfDay(req, res) {
+function getWordOfDay() {
 	// Find today's date
 	let now = Date.now();
 	// Floor to nearest day integer
@@ -38,7 +38,7 @@ function getWordOfDay(req, res) {
 	// Find remainder to index into answers list
 	now = now % answers.length;
 	// Return word found
-	res.send(answers[now]);
+	return answers[now];
 }
 
 /* Validates word in req.params.word, returning true if valid, false if not */
@@ -55,11 +55,69 @@ function validateWord(req, res) {
 	}
 }
 
+/* Gets colors of word in a string "wwwww", "cwyyc". Where 'w' is for wrong (gray), 'c' is for correct (green), and 'y' is for yellow */
+function getColors(req, res) {
+	// Grab word from request parameters
+	let guessedWord = req.params.word.toLowerCase();
+	// console.log("Got word " + guessedWord + "\n");
+	// Make word lowercase
+	guessedWord = guessedWord.toLowerCase();
+	// Grab word of the day and lowercase
+	let correctWord =  getWordOfDay().toLowerCase();
+	// console.log("Correct word: " + correctWord + "\n");
+
+	if(guessedWord == correctWord) {
+		res.send("ccccc");
+	}
+
+
+	// Initialize array of colors
+	let colors = Array(5).fill("w");
+
+	// Frequency table for letters
+	const lettersCount = {};
+
+	// Initialize freq table
+	for(let i = 0; i < 5; i++) {
+		lettersCount[correctWord[i]] = (lettersCount[correctWord[i]] || 0) + 1;
+	}
+
+	// First, iterate through, checking for words in the correct spot
+	for(let i = 0; i < 5; i++) {
+		if(guessedWord[i] == correctWord[i]) {
+			colors[i] = "c";
+
+			// Decrement count
+			lettersCount[guessedWord[i]]--;
+		}
+	}
+	
+	// Then, iterate through, checking if each word exists in the correct word. Using a set for simplification
+	for(let i = 0; i < 5; i++) {
+		// First, check that the color at the index isn't already green
+		if(colors[i] == "c") continue;
+
+		// If not, continue checking for membership
+		if(lettersCount[guessedWord[i]]) {
+			console.log("in yellow colors code \n");
+			colors[i] = "y";
+			lettersCount[guessedWord[i]]--;
+		}
+	}
+
+	console.log(colors);
+	res.send(colors);	
+}
+
 // Set word route, simply grabs word of the day
-app.get('/word', getWordOfDay);
+app.get('/colors/:word', getColors);
+
+app.get('/word', (req, res) => res.send(getWordOfDay()));
 
 // Set validate route, takes in word, and validates it if it's in the dictionary.
 app.get('/validate/:word', validateWord);
+
+
 // Let app listen
 app.listen(PORT, () => console.log("App listening on port " + PORT));
 
