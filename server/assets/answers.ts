@@ -1,4 +1,5 @@
-aback
+export default
+`aback
 abase
 abate
 abbey
@@ -2312,4 +2313,4 @@ young
 youth
 zebra
 zesty
-zonal
+zonal`

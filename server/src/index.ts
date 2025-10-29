@@ -1,25 +1,32 @@
-const fs = require('fs');
-const path = require('path');
-const express = require('express');
+/**
+ * Welcome to Cloudflare Workers! This is your first worker.
+ *
+ * - Run `npm run dev` in your terminal to start a development server
+ * - Open a browser tab at http://localhost:8787/ to see your worker in action
+ * - Run `npm run deploy` to publish your worker
+ *
+ * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
+ * `Env` object can be regenerated with `npm run cf-typegen`.
+ *
+ * Learn more at https://developers.cloudflare.com/workers/
+ */
+
+import { AutoRouter } from 'itty-router' // ~1kB
+
+const router = AutoRouter()
+
 const oneDay = 1000 * 60 * 60 * 24;
-const cors = require('cors');
 
-const app = express();
-// Process.env.PORT sets it to the port provided by render if there is one
-const PORT = process.env.PORT || 5000;
-
-// Set up cors since app and server are on different ports
-app.use(cors({
-	origin: [process.env.CLIENT_URL],
-	methods: ["GET"],
-}));
 
 // Initialize validGuesses and correct words
 // Valid guesses list was taken from github.com/tabatkins/wordle-list
-const guesses = fs.readFileSync(path.join(__dirname, "guesses.txt"), 'utf-8').split('\n').map(line => line.trim());
+import guessesFile from '../assets/guesses'
+const guesses = guessesFile.split('\n').map(line => line.trim());
 
 // Answers list was taken from https://gist.github.com/cfreshman/a03ef2cba789d8cf00c08f767e0fad7b#file-wordle-answers-alphabetical-txt-L8
-const answers = fs.readFileSync(path.join(__dirname, "answers.txt"), 'utf-8').split('\n').map(line => line.trim());
+import answersFile from '../assets/answers'
+const answers = answersFile.split('\n').map(line => line.trim());
+
 // Make set out of answers for O(1) lookup
 const guessesSet = new Set(guesses);
 
@@ -42,23 +49,22 @@ function getWordOfDay() {
 }
 
 /* Validates word in req.params.word, returning true if valid, false if not */
-function validateWord(req, res) {
+function validateWord(params: {word: string}) {
 	// Grab word from params
-	let word = req.params.word;
 
 	// See if word is in word set
-	if(guessesSet.has(word.toLowerCase())) {
-		res.send(true);
+	if(guessesSet.has(params.word.toLowerCase())) {
+		return true
 	}
 	else {
-		res.send(false);
+		return false
 	}
 }
 
 /* Gets colors of word in a string "wwwww", "cwyyc". Where 'w' is for wrong (gray), 'c' is for correct (green), and 'y' is for yellow */
-function getColors(req, res) {
+function getColors(params: {word: string}) {
 	// Grab word from request parameters
-	let guessedWord = req.params.word.toLowerCase();
+	let guessedWord = params.word.toLowerCase();
 	// console.log("Got word " + guessedWord + "\n");
 	// Make word lowercase
 	guessedWord = guessedWord.toLowerCase();
@@ -67,7 +73,7 @@ function getColors(req, res) {
 	// console.log("Correct word: " + correctWord + "\n");
 
 	if(guessedWord == correctWord) {
-		res.send("ccccc");
+		return "ccccc"
 	}
 
 
@@ -75,20 +81,21 @@ function getColors(req, res) {
 	let colors = Array(5).fill("w");
 
 	// Frequency table for letters
-	const lettersCount = {};
+	const lettersCount = new Map<string, number>();
 
 	// Initialize freq table
 	for(let i = 0; i < 5; i++) {
-		lettersCount[correctWord[i]] = (lettersCount[correctWord[i]] || 0) + 1;
+		let cur = lettersCount.get(correctWord[i]) || 0
+		lettersCount.set(correctWord[i], cur + i)
 	}
 
 	// First, iterate through, checking for words in the correct spot
 	for(let i = 0; i < 5; i++) {
 		if(guessedWord[i] == correctWord[i]) {
 			colors[i] = "c";
-
+			let cur = lettersCount.get(guessedWord[i]) || 0
 			// Decrement count
-			lettersCount[guessedWord[i]]--;
+			lettersCount.set(guessedWord[i], cur-1);
 		}
 	}
 	
@@ -98,29 +105,24 @@ function getColors(req, res) {
 		if(colors[i] == "c") continue;
 
 		// If not, continue checking for membership
-		if(lettersCount[guessedWord[i]]) {
+		if((lettersCount.get(guessedWord[i]) || 0) > 0) {
 			console.log("in yellow colors code \n");
 			colors[i] = "y";
-			lettersCount[guessedWord[i]]--;
+			lettersCount.set(guessedWord[i], (lettersCount.get(guessedWord[i]) || 1) - 1);
 		}
 	}
 
 	console.log(colors);
-	res.send(colors);	
+	return colors	
 }
 
 // Set word route, simply grabs word of the day
-app.get('/colors/:word', getColors);
+router.get('/colors/:word', getColors);
 
-app.get('/word', (req, res) => res.send(getWordOfDay()));
+router.get('/word', getWordOfDay);
 
 // Set validate route, takes in word, and validates it if it's in the dictionary.
-app.get('/validate/:word', validateWord);
+router.get('/validate/:word', validateWord);
 
 
-// Let app listen
-app.listen(PORT, () => console.log("App listening on port " + PORT));
-
-process.on('SIGINT', () => {
-	process.exit(0);
-})
+export default{...router}

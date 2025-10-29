@@ -1,6 +1,21 @@
 {
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^5.1.0"
-  }
+	"name": "server",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
+		"cf-typegen": "wrangler types"
+	},
+	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "^0.8.19",
+		"typescript": "^5.5.2",
+		"vite": "^7.1.12",
+		"vitest": "~3.2.0",
+		"wrangler": "^4.45.2"
+	},
+	"dependencies": {
+		"itty-router": "^5.0.22"
+	}
 }

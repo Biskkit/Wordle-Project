@@ -1,4 +1,5 @@
-rossa
+export default
+`rossa
 jetty
 wizzo
 cuppa
@@ -14852,4 +14853,4 @@ dunny
 decal
 fungs
 cadgy
-jalap
+jalap`
