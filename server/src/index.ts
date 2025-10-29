@@ -11,9 +11,14 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-import { AutoRouter } from 'itty-router' // ~1kB
+import { AutoRouter, cors } from 'itty-router' // ~1kB
 
-const router = AutoRouter()
+const {preflight, corsify} = cors()
+
+const router = AutoRouter({
+	before: [preflight],
+	finally: [corsify]
+})
 
 const oneDay = 1000 * 60 * 60 * 24;
 
