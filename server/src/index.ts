@@ -10,10 +10,17 @@
  *
  * Learn more at https://developers.cloudflare.com/workers/
  */
+// ~1kB
+import { env } from 'cloudflare:workers';
+import { AutoRouter, cors } from 'itty-router'
 
-import { AutoRouter, cors } from 'itty-router' // ~1kB
 
-const {preflight, corsify} = cors()
+// Default export to grab environment variables
+
+const {preflight, corsify} = cors({
+	origin: ['https://wordle-project-1.onrender.com', "http://localhost:5173"],
+	allowMethods: 'GET',
+})
 
 const router = AutoRouter({
 	before: [preflight],
@@ -54,7 +61,7 @@ function getWordOfDay() {
 }
 
 /* Validates word in req.params.word, returning true if valid, false if not */
-function validateWord(params: {word: string}) {
+function validateWord(params: {word: string }) {
 	// Grab word from params
 
 	// See if word is in word set
@@ -91,7 +98,7 @@ function getColors(params: {word: string}) {
 	// Initialize freq table
 	for(let i = 0; i < 5; i++) {
 		let cur = lettersCount.get(correctWord[i]) || 0
-		lettersCount.set(correctWord[i], cur + i)
+		lettersCount.set(correctWord[i], cur + 1)
 	}
 
 	// First, iterate through, checking for words in the correct spot
@@ -111,9 +118,11 @@ function getColors(params: {word: string}) {
 
 		// If not, continue checking for membership
 		if((lettersCount.get(guessedWord[i]) || 0) > 0) {
+			console.log(`Guessed letter: ${guessedWord[i]}. With frequency: ${lettersCount.get(guessedWord[i])}`)
 			console.log("in yellow colors code \n");
 			colors[i] = "y";
 			lettersCount.set(guessedWord[i], (lettersCount.get(guessedWord[i]) || 1) - 1);
+			console.log(`Updated frequency: ${lettersCount.get(guessedWord[i])}`)
 		}
 	}
 
@@ -121,13 +130,11 @@ function getColors(params: {word: string}) {
 	return colors	
 }
 
-// Set word route, simply grabs word of the day
-router.get('/colors/:word', getColors);
-
-router.get('/word', getWordOfDay);
-
-// Set validate route, takes in word, and validates it if it's in the dictionary.
-router.get('/validate/:word', validateWord);
+router.get('/colors/:word', getColors)
+.get('/word', getWordOfDay)
+.get('/validate/:word', validateWord);
 
 
-export default{...router}
+export default {   
+	...router
+}
