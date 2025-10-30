@@ -18,7 +18,7 @@ import { AutoRouter, cors } from 'itty-router'
 // Default export to grab environment variables
 
 const {preflight, corsify} = cors({
-	origin: ['https://wordle-project-1.onrender.com', "http://localhost:5173"],
+	origin: [env.CLIENT_URL],
 	allowMethods: 'GET',
 })
 
